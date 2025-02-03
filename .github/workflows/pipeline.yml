@@ -121,10 +121,11 @@ jobs:
         # SERVICES = mfehost mfeassistant mfecard
         run: |
           echo "Services: $SERVICES"
-          source "./.env"
+          mkdir -p generated-yamls/
           for service in $SERVICES; do
-            mkdir -p generated-yamls/
+            source "./.env"
             envsubst < infrastructure/manifest.yml > generated-yamls/$(basename $service.yml)
+            cat generated-yamls/$(basename $service.yml)
           done
         env:
           SERVICES: ${{ env.SERVICES }}
