@@ -58,7 +58,7 @@ jobs:
 
       - name: Select MS
         run: |
-          git fetch origin main:main
+          git fetch origin main:refs/remotes/origin/main
           SERVICES=$(git diff --name-only HEAD main | grep '^mfe' | cut -d'/' -f1 | sed 's/\.//g' | uniq | tr '\n' ' ')
           echo "SERVICES=$SERVICES" >> $GITHUB_ENV
 
