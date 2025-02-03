@@ -117,16 +117,16 @@ jobs:
       #     kubeseal --context "$AKS_CONTEXT" --controller-namespace flux-system --fetch-cert > ./mycert.pem
           
       - name: Update Yamls
-        # SERVICES = mfehost mfeassistant mfecard
         run: |
-          echo "Services: $SERVICES"
+          echo "Services: $SERVICE"
           mkdir -p generated-yamls/
-          for service in $SERVICES; do
+          for service in $SERVICE; do
             source "./.env"
-            envsubst < infrastructure/manifest.yml > generated-yamls/$(basename $SERVICES.yml)
-            cat generated-yamls/$(basename $service.yml)
+            envsubst < infrastructure/manifest.yml > generated-yamls/$(basename $service).yml
+            cat generated-yamls/$(basename $service).yml
           done
         env:
+          SERVICE: ${{ env.SERVICES }}
           CERT_PEM: ${{ env.CERT_PEM }}
           VITE_HOST_PORT: ${{ vars.VITE_HOST_PORT }}
           VITE_ASSISTANT_PORT: ${{ vars.VITE_ASSISTANT_PORT }}
