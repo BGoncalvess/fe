@@ -59,7 +59,13 @@ jobs:
       - name: Select MS
         run: |
           SERVICES=$(git diff --name-only HEAD main | grep '^mfe' | cut -d'/' -f1 | sed 's/\.//g' | uniq | tr '\n' ' ')
+          echo "Detected services: $SERVICES"
           echo "SERVICES=$SERVICES" >> $GITHUB_ENV
+
+      - name: Debug Services
+        run: echo "SERVICES=$SERVICES"
+        env:
+          SERVICES: ${{ env.SERVICES }}
 
       # - name: Push images to ACR
       #   shell: bash
