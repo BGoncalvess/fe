@@ -10,17 +10,16 @@ on:
 jobs:
   ci:
     runs-on: ubuntu-latest
-    environment: dev
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Login Azure
-        uses: azure/login@v2
-        with:
-          creds: '{"clientId":"${{ secrets.AZURE_CLIENT_ID}}","clientSecret":"${{ secrets.AZURE_CLIENT_SECRET }}","tenantId":"${{ secrets.AZURE_TENANT_ID}}","subscriptionId":"${{ secrets.AZURE_SUBSCRIPTION_ID}}"}'
+      # - name: Login Azure
+      #   uses: azure/login@v2
+      #   with:
+      #     creds: '{"clientId":"${{ secrets.AZURE_CLIENT_ID}}","clientSecret":"${{ secrets.AZURE_CLIENT_SECRET }}","tenantId":"${{ secrets.AZURE_TENANT_ID}}","subscriptionId":"${{ secrets.AZURE_SUBSCRIPTION_ID}}"}'
 
       # - name: Get secrets from Key Vault
       #   run: |
@@ -31,14 +30,22 @@ jobs:
       # - name: Code validations
       #   run: echo 'Code validations'
 
-      - name: Compile & run
+      - name: Compile & run locally
         run: |
           chmod +x cli/*.sh
           ./cli/start.sh -d
-        # env:
-        #   VITE_HOST_PORT: ${{ vars.VITE_HOST_PORT }}
-        #   VITE_ASSISTANT_PORT: ${{ vars.VITE_ASSISTANT_PORT }}
-        #   VITE_ASSISTANT_URL: ${{ vars.VITE_ASSISTANT_URL }}
+      
+      # - name: Compile & run cluster
+      #   run: |
+      #     ENV_LIST="dev qa prod" 
+      #     chmod +x cli/*.sh
+      #     for clusters_list in $ENV_LIST; do
+      #       ./cli/start.sh -d
+      #     done
+      #   env:
+      #     VITE_HOST_PORT: ${{ vars.VITE_HOST_PORT }}
+      #     VITE_ASSISTANT_PORT: ${{ vars.VITE_ASSISTANT_PORT }}
+      #     VITE_ASSISTANT_URL: ${{ vars.VITE_ASSISTANT_URL }}
 
       # - name: Unit tests
       #   run: echo 'Unit tests'
@@ -55,19 +62,19 @@ jobs:
           SERVICES=$(git diff --name-only HEAD main | grep '^mfe' | cut -d'/' -f1 | sed 's/\.//g' | uniq | tr '\n' ' ')
           echo "SERVICES=$SERVICES" >> $GITHUB_ENV
 
-      - name: Push images to ACR
-        shell: bash
-        run: |
-          for service in $SERVICES; do
-            IMAGE=$(docker images | grep -i "$service" | awk '{print $1}' | tr '[:upper:]' '[:lower:]')
-            az acr login --name "${{ vars.ACR_NAME }}"
-            REPO_NAME=$(echo "${{ vars.ACR_REPO_NAME }}" | tr '[:upper:]' '[:lower:]')
-            IMAGE_NAME=$(basename "${IMAGE}" | tr '[:upper:]' '[:lower:]')
-            docker tag "${IMAGE}" "${{ vars.ACR_NAME }}.azurecr.io/${REPO_NAME}/${IMAGE_NAME}:latest"
-            docker push "${{ vars.ACR_NAME }}.azurecr.io/${REPO_NAME}/${IMAGE_NAME}:latest"
-          done
-        env:
-          SERVICES: ${{ env.SERVICES }}
+      # - name: Push images to ACR
+      #   shell: bash
+      #   run: |
+      #     for service in $SERVICES; do
+      #       IMAGE=$(docker images | grep -i "$service" | awk '{print $1}' | tr '[:upper:]' '[:lower:]')
+      #       az acr login --name "${{ vars.ACR_NAME }}"
+      #       REPO_NAME=$(echo "${{ vars.ACR_REPO_NAME }}" | tr '[:upper:]' '[:lower:]')
+      #       IMAGE_NAME=$(basename "${IMAGE}" | tr '[:upper:]' '[:lower:]')
+      #       docker tag "${IMAGE}" "${{ vars.ACR_NAME }}.azurecr.io/${REPO_NAME}/${IMAGE_NAME}:latest"
+      #       docker push "${{ vars.ACR_NAME }}.azurecr.io/${REPO_NAME}/${IMAGE_NAME}:latest"
+      #     done
+      #   env:
+      #     SERVICES: ${{ env.SERVICES }}
 
       # - name: Upload to Blob Storage
       #   run: |
@@ -86,29 +93,60 @@ jobs:
       #       --name ${{ secrets.AZURE_CDN_ENDPOINT }} \
       #       --content-paths "/*"
 
-      - name: Clone IDP Repo
-        uses: actions/checkout@v4
-        with:
-          repository: ${{ vars.IDP_REPO_NAME }}
-          token: ${{ secrets.IDP_REPO_TOKEN }}
+      # - name: Clone IDP Repo
+      #   uses: actions/checkout@v4
+      #   with:
+      #     repository: ${{ vars.IDP_REPO_NAME }}
+      #     token: ${{ secrets.IDP_REPO_TOKEN }}
 
-      - name: Install kubeseal
+      # - name: Install kubeseal
+      #   run: |
+      #     set -eu
+      #     curl -sL https://github.com/bitnami-labs/sealed-secrets/releases/download/v0.18.0/kubeseal-0.18.0-linux-amd64.tar.gz \
+      #       -o $GITHUB_WORKSPACE/kubeseal-0.18.0-linux-amd64.tar.gz
+      #     tar xzvf $GITHUB_WORKSPACE/kubeseal-0.18.0-linux-amd64.tar.gz
+      #     mkdir -p $GITHUB_WORKSPACE/bin
+      #     mv $GITHUB_WORKSPACE/{,bin/}kubeseal
+      #     chmod +x $GITHUB_WORKSPACE/bin/kubeseal
+      #     echo $GITHUB_WORKSPACE/bin >> $GITHUB_PATH
+
+      # - name: Get cluster credentials and Encrypt Secrets
+      #   shell: bash
+      #   run: |
+      #     az aks get-credentials --resource-group ${{ vars.AKS_RG_NAME_DEV }} --name ${{ vars.AKS_CLUSTER_NAME_DEV }}
+      #     export AKS_CONTEXT=$(kubectl config current-context) 
+      #     kubeseal --context "$AKS_CONTEXT" --controller-namespace flux-system --fetch-cert > ./mycert.pem
+          
+      - name: Update Yamls
+        # SERVICES = mfehost mfeassistant mfecard
         run: |
-          set -eu
-          curl -sL https://github.com/bitnami-labs/sealed-secrets/releases/download/v0.18.0/kubeseal-0.18.0-linux-amd64.tar.gz \
-            -o $GITHUB_WORKSPACE/kubeseal-0.18.0-linux-amd64.tar.gz
-          tar xzvf $GITHUB_WORKSPACE/kubeseal-0.18.0-linux-amd64.tar.gz
-          mkdir -p $GITHUB_WORKSPACE/bin
-          mv $GITHUB_WORKSPACE/{,bin/}kubeseal
-          chmod +x $GITHUB_WORKSPACE/bin/kubeseal
-          echo $GITHUB_WORKSPACE/bin >> $GITHUB_PATH
+          source "./.env"
+          for service in ${{ env.SERVICES }}; do
+            mkdir -p generated-yamls/$service
+            envsubst < infrastructure/manifest.yml > generated-yamls/$(basename $service)
+          done
+        env:
+          SERVICE: ${{ env.SERVICES }}
+          CERT_PEM: ${{ env.CERT_PEM }}
+          VITE_HOST_PORT: ${vars.VITE_HOST_PORT}
+          VITE_ASSISTANT_PORT: ${vars.VITE_ASSISTANT_PORT}
 
-      - name: Get cluster credentials and Encrypt Secrets
-        shell: bash
+      - name: Create PR
         run: |
-          az aks get-credentials --resource-group ${{ vars.AKS_RG_NAME_DEV }} --name ${{ vars.AKS_CLUSTER_NAME_DEV }}
-          export AKS_CONTEXT=$(kubectl config current-context) 
-          kubeseal --context "$AKS_CONTEXT" --controller-namespace flux-system --fetch-cert > ./mycert.pem
+          git checkout -b manifests
+          git status
+          git add generated-yamls/*
+          git commit -m "Add changes"
+          git status
+          git push --set-upstream origin manifests
 
-      # - name: Create PR to IDP
-      #   run: echo 'Create PR to IDP'
+          gh pr create --base ${{ inputs.DESTINATION_BRANCH_NAME }} \
+                       --head manifests \
+                       --title "Automated PR" \
+                       --body "PR created by workflow" \
+                       --repo ${{ inputs.IDP_REPO_NAME }}
+        env:
+          LOCAL_BRANCH_NAME: ${ github.ref_name }
+          IDP_REPO_NAME: ${ vars.IDP_REPO_NAME }
+          DESTINATION_BRANCH_NAME: ${ vars.DESTINATION_BRANCH_NAME }
+          IDP_REPO_TOKEN: ${ secrets.IDP_REPO_TOKEN }
