@@ -120,15 +120,14 @@ jobs:
       - name: Update Yamls
         # SERVICES = mfehost mfeassistant mfecard
         run: |
-          echo "Services: $SERVICES"
+          echo "Services: ${{ env.SERVICES }}"
           mkdir -p generated-yamls/
-          for service in $SERVICES; do
+          for service in ${{ env.SERVICES }}; do
             source "./.env"
-            envsubst < infrastructure/manifest.yml > generated-yamls/$(basename $service.yml)
+            envsubst < infrastructure/manifest.yml > generated-yamls/$(basename ${{ env.SERVICES }}.yml)
             cat generated-yamls/$(basename $service.yml)
           done
         env:
-          SERVICES: ${{ env.SERVICES }}
           CERT_PEM: ${{ env.CERT_PEM }}
           VITE_HOST_PORT: ${{ vars.VITE_HOST_PORT }}
           VITE_ASSISTANT_PORT: ${{ vars.VITE_ASSISTANT_PORT }}
