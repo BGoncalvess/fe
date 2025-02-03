@@ -58,7 +58,6 @@ jobs:
 
       - name: Select MS
         run: |
-          git fetch origin main:refs/remotes/origin/main
           SERVICES=$(git diff --name-only HEAD main | grep '^mfe' | cut -d'/' -f1 | sed 's/\.//g' | uniq | tr '\n' ' ')
           echo "SERVICES=$SERVICES" >> $GITHUB_ENV
 
@@ -120,11 +119,11 @@ jobs:
       - name: Update Yamls
         # SERVICES = mfehost mfeassistant mfecard
         run: |
-          echo "Services: ${{ env.SERVICES }}"
+          echo "Services: $SERVICES"
           mkdir -p generated-yamls/
-          for service in ${{ env.SERVICES }}; do
+          for service in $SERVICES; do
             source "./.env"
-            envsubst < infrastructure/manifest.yml > generated-yamls/$(basename ${{ env.SERVICES }}.yml)
+            envsubst < infrastructure/manifest.yml > generated-yamls/$(basename $SERVICES.yml)
             cat generated-yamls/$(basename $service.yml)
           done
         env:
