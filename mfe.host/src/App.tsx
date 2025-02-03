@@ -40,7 +40,7 @@ const App = () => {
   );
 };
 
-console.log("mfe.client-context");
+console.log("mfe.asdaasd-context");
 export default App;
 
 

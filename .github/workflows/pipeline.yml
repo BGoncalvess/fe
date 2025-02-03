@@ -122,7 +122,7 @@ jobs:
         run: |
           source "./.env"
           for service in ${{ env.SERVICES }}; do
-            mkdir -p generated-yamls/$service
+            mkdir -p generated-yamls/
             envsubst < infrastructure/manifest.yml > generated-yamls/$(basename $service)
           done
         env:
