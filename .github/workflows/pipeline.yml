@@ -58,16 +58,10 @@ jobs:
 
       - name: Select MS
         shell: bash
+        # SERVICES=$(git diff --name-only HEAD main | grep '^mfe' | cut -d'/' -f1 | sed 's/\.//g' | uniq | tr '\n' ' ')
         run: |
-          git fetch origin main:refs/remotes/origin/main
-          SERVICES=$(git diff --name-only HEAD main | grep '^mfe' | cut -d'/' -f1 | sed 's/\.//g' | uniq | tr '\n' ' ')
-          echo "Detected services: $SERVICES"
+          SERVICES=$("mfe.assistant" "mfe.host")
           echo "SERVICES=$SERVICES" >> $GITHUB_ENV
-
-      - name: Debug Services
-        run: echo "SERVICES=$SERVICES"
-        env:
-          SERVICES: ${{ env.SERVICES }}
 
       # - name: Push images to ACR
       #   shell: bash
@@ -117,17 +111,17 @@ jobs:
       #     chmod +x $GITHUB_WORKSPACE/bin/kubeseal
       #     echo $GITHUB_WORKSPACE/bin >> $GITHUB_PATH
 
-      - name: Get cluster credentials
-        shell: bash
-        run: |
-          az aks get-credentials --resource-group ${{ vars.AKS_RG_NAME_DEV }} --name ${{ vars.AKS_CLUSTER_NAME_DEV }}
+      # - name: Get cluster credentials
+      #   shell: bash
+      #   run: |
+      #     az aks get-credentials --resource-group ${{ vars.AKS_RG_NAME_DEV }} --name ${{ vars.AKS_CLUSTER_NAME_DEV }}
       
-      - name: Encrypt Secrets
-        shell: bash
-        run: |
-          kubelogin convert-kubeconfig -l azurecli  
-          export AKS_CONTEXT=$(kubectl config current-context) 
-          kubeseal --context "$AKS_CONTEXT" --controller-namespace flux-system --fetch-cert > ./mycert.pem
+      # - name: Encrypt Secrets
+      #   shell: bash
+      #   run: |
+      #     kubelogin convert-kubeconfig -l azurecli  
+      #     export AKS_CONTEXT=$(kubectl config current-context) 
+      #     kubeseal --context "$AKS_CONTEXT" --controller-namespace flux-system --fetch-cert > ./mycert.pem
           
       - name: Update Yamls
         run: |
