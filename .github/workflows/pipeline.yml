@@ -30,10 +30,10 @@ jobs:
       # - name: Code validations
       #   run: echo 'Code validations'
 
-      - name: Compile & run locally
-        run: |
-          chmod +x cli/*.sh
-          ./cli/start.sh -d
+      # - name: Compile & run locally
+      #   run: |
+      #     chmod +x cli/*.sh
+      #     ./cli/start.sh -d
       
       # - name: Compile & run cluster
       #   run: |
@@ -56,12 +56,12 @@ jobs:
       # - name: Cross integration tests
       #   run: echo 'Cross integration tests'
 
-      - name: Select MS
-        shell: bash
-        # SERVICES=$(git diff --name-only HEAD main | grep '^mfe' | cut -d'/' -f1 | sed 's/\.//g' | uniq | tr '\n' ' ')
-        run: |
-          SERVICES=("mfe.assistant mfe.host")
-          echo "SERVICES=$SERVICES" >> $GITHUB_ENV
+      # - name: Select MS
+      #   shell: bash
+      #   # SERVICES=$(git diff --name-only HEAD main | grep '^mfe' | cut -d'/' -f1 | sed 's/\.//g' | uniq | tr '\n' ' ')
+      #   run: |
+      #     SERVICES=("mfe.assistant mfe.host")
+      #     echo "SERVICES=$SERVICES" >> $GITHUB_ENV
 
       # - name: Push images to ACR
       #   shell: bash
@@ -128,8 +128,11 @@ jobs:
         run: |
           mkdir -p generated-ymls/
           SERVICE=("mfehost  mfeassistant")
-          CHANGED_SERVICES=("${SERVICE:0:3}.${SERVICE:3}")
-          echo "$CHANGED_SERVICES"
+          CHANGED_SERVICES=()
+          for SERVICE in "${SERVICES[@]}"; do
+              CHANGED_SERVICES+=("${SERVICE:0:3}.${SERVICE:3}")
+              echo "$CHANGED_SERVICE"
+          done
           for service in "$SERVICE"; do
             export SERVICE_NAME="$service"
             source "./.env"
