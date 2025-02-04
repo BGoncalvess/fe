@@ -130,10 +130,10 @@ jobs:
           SERVICE=("mfe.assistant mfe.host")
           CHANGED_SERVICES=($SERVICES)
           for service in "${CHANGED_SERVICES[@]}"; do
-            service_name=$(basename $service)
+            export SERVICE_NAME="$SERVICE_NAME"
             source "./.env"
-            envsubst < "$service/infrastructure/manifest.yml" > "generated-ymls/${service_name}.yml"
-            cat generated-ymls/${service_name}.yml
+            envsubst < "$service/infrastructure/manifest.yml" > "generated-ymls/${service}.yml"
+            cat generated-ymls/${service}.yml
           done
         env:
           SERVICE: ${{ env.SERVICES }}
