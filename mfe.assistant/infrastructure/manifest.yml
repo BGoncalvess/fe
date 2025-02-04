@@ -25,7 +25,7 @@ spec:
       serviceAccountName: ${SERVICE_NAME}-service-account
       containers:
       - name: ${SERVICE_NAME}
-        image: ${SERVICE_NAME}:latest
+        image: ${IMAGE_NAME}:latest
         imagePullPolicy: Never
         ports:
         - containerPort: ${VITE_ASSISTANT_PORT}
