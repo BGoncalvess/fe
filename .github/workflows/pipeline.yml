@@ -136,7 +136,8 @@ jobs:
           for service in "$SERVICE"; do
             export SERVICE_NAME="$service"
             source "./.env"
-            envsubst < "$CHANGED_SERVICES/infrastructure/manifest.yml" > "generated-ymls/${service}.yml"
+            for changed_services in "${CHANGED_SERVICES[@]}"; do
+              envsubst < "$changed_services/infrastructure/manifest.yml" > "generated-ymls/${service}.yml"
             cat generated-ymls/${service}.yml
           done
         env:
