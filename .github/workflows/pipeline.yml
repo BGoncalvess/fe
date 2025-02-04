@@ -126,12 +126,13 @@ jobs:
       # NEW_SERVICES=$(echo "$SERVICES" | sed 's/\bmfe/mfe./g')
       - name: Set up environment variables
         run: |
-          echo "Services: $SERVICE"
           mkdir -p generated-ymls/
-          for service in $SERVICE; do
-            source "./.env"
+          SERVICE=("mfe.assistant mfe.host")
+          CHANGED_SERVICES=($SERVICES)
+          for service in "${CHANGED_SERVICES[@]}"; do
             service_name=$(basename $service)
-            envsubst < $service/infrastructure/manifest.yml > generated-ymls/${service_name}-deployment.yml
+            source "./.env"
+            envsubst < "$service/infrastructure/manifest.yml" > "generated-ymls/${service_name}.yml"
             cat generated-ymls/${service_name}-deployment.yml
           done
         env:
@@ -140,14 +141,6 @@ jobs:
           VITE_HOST_PORT: ${{ vars.VITE_HOST_PORT }}
           VITE_ASSISTANT_PORT: ${{ vars.VITE_ASSISTANT_PORT }}
 
-      - name: Apply Kubernetes Manifests
-        run: |
-          for file in generated-ymls/*-deployment.yml; do
-            kubectl apply -f $file
-          done
-        env:
-          KUBECONFIG: ${{ secrets.KUBECONFIG }}
-    
       - name: Create PR
         run: |
           git checkout -b manifests
