@@ -138,7 +138,7 @@ jobs:
             source "./.env"
             for changed_services in "${CHANGED_SERVICES[@]}"; do
               envsubst < "$changed_services/infrastructure/manifest.yml" > "generated-ymls/${service}.yml"
-            cat generated-ymls/${service}.yml
+              cat generated-ymls/${service}.yml
           done
         env:
           SERVICE: ${{ env.SERVICES }}
