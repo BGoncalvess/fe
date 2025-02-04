@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ${SERVICE}-deployment
+  name: ${service}-deployment
   namespace: galaxy-ms
   labels:
     app: ${SERVICE}

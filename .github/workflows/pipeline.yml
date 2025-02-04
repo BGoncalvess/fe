@@ -124,6 +124,7 @@ jobs:
       #     kubeseal --context "$AKS_CONTEXT" --controller-namespace flux-system --fetch-cert > ./mycert.pem
           
       - name: Update Yamls
+      # NEW_SERVICES=$(echo "$SERVICES" | sed 's/\bmfe/mfe./g')
         run: |
           echo "Services: $SERVICE"
           mkdir -p generated-ymls/
