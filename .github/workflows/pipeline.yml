@@ -60,7 +60,7 @@ jobs:
         shell: bash
         # SERVICES=$(git diff --name-only HEAD main | grep '^mfe' | cut -d'/' -f1 | sed 's/\.//g' | uniq | tr '\n' ' ')
         run: |
-          SERVICES=$("mfe.assistant mfe.host")
+          SERVICES=("mfe.assistant mfe.host")
           echo "SERVICES=$SERVICES" >> $GITHUB_ENV
 
       # - name: Push images to ACR
