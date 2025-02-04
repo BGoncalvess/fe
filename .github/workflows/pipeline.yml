@@ -130,7 +130,7 @@ jobs:
           SERVICE=("mfe.assistant mfe.host")
           CHANGED_SERVICES=($SERVICES)
           for service in "${CHANGED_SERVICES[@]}"; do
-            export SERVICE_NAME="$SERVICE_NAME"
+            export SERVICE_NAME="$service"
             source "./.env"
             envsubst < "$service/infrastructure/manifest.yml" > "generated-ymls/${service}.yml"
             cat generated-ymls/${service}.yml
