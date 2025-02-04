@@ -133,7 +133,7 @@ jobs:
             service_name=$(basename $service)
             source "./.env"
             envsubst < "$service/infrastructure/manifest.yml" > "generated-ymls/${service_name}.yml"
-            cat generated-ymls/${service_name}-deployment.yml
+            cat generated-ymls/${service_name}.yml
           done
         env:
           SERVICE: ${{ env.SERVICES }}
