@@ -40,7 +40,7 @@ const App = () => {
   );
 };
 
-console.log("mfe.a-conteaaaaaaaaaaaaaaaaaaaaaaasadasdasdxt");
+console.log("mfe.a-");
 export default App;
 
 
