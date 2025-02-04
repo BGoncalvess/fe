@@ -127,18 +127,20 @@ jobs:
       - name: Set up environment variables
         run: |
           mkdir -p generated-ymls/
-          SERVICE=("mfehost  mfeassistant")
+          SERVICES=("mfehost" "mfeassistant")
           CHANGED_SERVICES=()
           for SERVICE in "${SERVICES[@]}"; do
-              CHANGED_SERVICES+=("${SERVICE:0:3}.${SERVICE:3}")
-              echo "$CHANGED_SERVICE"
+            CHANGED_SERVICE="${SERVICE:0:3}.${SERVICE:3}"
+            CHANGED_SERVICES+=("${CHANGED_SERVICE}")
+            echo "${CHANGED_SERVICE}"
           done
-          for service in "$SERVICE"; do
+          for service in "${SERVICES[@]}"; do
             export SERVICE_NAME="$service"
             source "./.env"
-            for changed_services in "${CHANGED_SERVICES[@]}"; do
-              envsubst < "$changed_services/infrastructure/manifest.yml" > "generated-ymls/${service}.yml"
-              cat generated-ymls/${service}.yml
+            for changed_service in "${CHANGED_SERVICES[@]}"; do
+              envsubst < "${changed_service}/infrastructure/manifest.yml" > "generated-ymls/${service}.yml"
+              cat "generated-ymls/${service}.yml"
+            done
           done
         env:
           SERVICE: ${{ env.SERVICES }}
