@@ -60,7 +60,7 @@ jobs:
         shell: bash
         # SERVICES=$(git diff --name-only HEAD main | grep '^mfe' | cut -d'/' -f1 | sed 's/\.//g' | uniq | tr '\n' ' ')
         run: |
-          SERVICES=$("mfe.assistant" "mfe.host")
+          SERVICES=$("mfe.assistant mfe.host")
           echo "SERVICES=$SERVICES" >> $GITHUB_ENV
 
       # - name: Push images to ACR
@@ -129,7 +129,7 @@ jobs:
           mkdir -p generated-ymls/
           for service in $SERVICE; do
             source "./.env"
-            envsubst < infrastructure/manifest.yml > generated-ymls/$(basename $service).yml
+            envsubst < $service/infrastructure/manifest.yml > generated-ymls/$(basename $service).yml
             cat generated-ymls/$(basename $service).yml
           done
         env:
