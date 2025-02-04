@@ -59,7 +59,7 @@ jobs:
       - name: Select MS
         shell: bash
         run: |
-          git fetch origin main:main
+          git fetch origin main:refs/remotes/origin/main
           SERVICES=$(git diff --name-only HEAD main | grep '^mfe' | cut -d'/' -f1 | sed 's/\.//g' | uniq | tr '\n' ' ')
           echo "Detected services: $SERVICES"
           echo "SERVICES=$SERVICES" >> $GITHUB_ENV
@@ -72,9 +72,9 @@ jobs:
       # - name: Push images to ACR
       #   shell: bash
       #   run: |
+    #       az acr login --name "${{ vars.ACR_NAME }}"
       #     for service in $SERVICES; do
       #       IMAGE=$(docker images | grep -i "$service" | awk '{print $1}' | tr '[:upper:]' '[:lower:]')
-      #       az acr login --name "${{ vars.ACR_NAME }}"
       #       REPO_NAME=$(echo "${{ vars.ACR_REPO_NAME }}" | tr '[:upper:]' '[:lower:]')
       #       IMAGE_NAME=$(basename "${IMAGE}" | tr '[:upper:]' '[:lower:]')
       #       docker tag "${IMAGE}" "${{ vars.ACR_NAME }}.azurecr.io/${REPO_NAME}/${IMAGE_NAME}:latest"
@@ -117,17 +117,17 @@ jobs:
       #     chmod +x $GITHUB_WORKSPACE/bin/kubeseal
       #     echo $GITHUB_WORKSPACE/bin >> $GITHUB_PATH
 
-      # - name: Get cluster credentials
-      #   shell: bash
-      #   run: |
-      #     az aks get-credentials --resource-group ${{ vars.AKS_RG_NAME_DEV }} --name ${{ vars.AKS_CLUSTER_NAME_DEV }}
+      - name: Get cluster credentials
+        shell: bash
+        run: |
+          az aks get-credentials --resource-group ${{ vars.AKS_RG_NAME_DEV }} --name ${{ vars.AKS_CLUSTER_NAME_DEV }}
       
-      # - name: Encrypt Secrets
-      #   shell: bash
-      #   run: |
-      #     kubelogin convert-kubeconfig -l azurecli  
-      #     export AKS_CONTEXT=$(kubectl config current-context) 
-      #     kubeseal --context "$AKS_CONTEXT" --controller-namespace flux-system --fetch-cert > ./mycert.pem
+      - name: Encrypt Secrets
+        shell: bash
+        run: |
+          kubelogin convert-kubeconfig -l azurecli  
+          export AKS_CONTEXT=$(kubectl config current-context) 
+          kubeseal --context "$AKS_CONTEXT" --controller-namespace flux-system --fetch-cert > ./mycert.pem
           
       - name: Update Yamls
         run: |
