@@ -74,7 +74,7 @@ jobs:
       - name: Generate yamls
         run: |
           mkdir -p generated-ymls/
-          
+    
           SERVICES_ARRAY=(${SERVICES})
           DIRS_ARRAY=(${DIRS})
 
@@ -83,34 +83,38 @@ jobs:
             dir="${DIRS_ARRAY[$i]}"
             export SERVICE_NAME="$service"
 
+            echo "Processing service: $service"
+            echo "Using directory: $dir"
+            echo "Environment: ${{ matrix.environment }}"
+
             envsubst < "${dir}/infrastructure/manifest.yml" > "./generated-ymls/${service}-${{ matrix.environment }}.yml"
             
             cat "./generated-ymls/${service}-${{ matrix.environment }}.yml"
           done
 
-  # cd:
-  #   needs: build
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Set up git configuration
-  #       run: |
-  #         git config --global user.name "github-actions[bot]"
-  #         git config --global user.email "github-actions[bot]@users.noreply.github.com"
+  cd:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up git configuration
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-  #     - name: Create PR
-  #       run: |
-  #         git checkout -b manifests
-  #         git add generated-ymls/*
-  #         git commit -m "Add changes"
-  #         git status
-  #         git push --set-upstream origin manifests
+      - name: Create PR
+        run: |
+          git checkout -b manifests
+          git add generated-ymls/*
+          git commit -m "Add changes"
+          git status
+          git push --set-upstream origin manifests
 
-  #         gh pr create --base ${{ env.DESTINATION_BRANCH_NAME }} \
-  #                      --head manifests \
-  #                      --title "Automated PR" \
-  #                      --body "PR created by workflow" \
-  #                      --repo ${{ env.IDP_REPO_NAME }}
-  #       env:
-  #         IDP_REPO_NAME: ${{ vars.IDP_REPO_NAME }}
-  #         DESTINATION_BRANCH_NAME: ${{ vars.DESTINATION_BRANCH_NAME }}
-  #         IDP_REPO_TOKEN: ${{ secrets.IDP_REPO_TOKEN }}
+          gh pr create --base ${{ env.DESTINATION_BRANCH_NAME }} \
+                       --head manifests \
+                       --title "Automated PR" \
+                       --body "PR created by workflow" \
+                       --repo ${{ env.IDP_REPO_NAME }}
+        env:
+          IDP_REPO_NAME: ${{ vars.IDP_REPO_NAME }}
+          DESTINATION_BRANCH_NAME: ${{ vars.DESTINATION_BRANCH_NAME }}
+          IDP_REPO_TOKEN: ${{ secrets.IDP_REPO_TOKEN }}
