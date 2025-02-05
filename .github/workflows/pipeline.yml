@@ -63,7 +63,7 @@ jobs:
           for service in $SERVICES; do
             IMAGE_NAME=$(echo "$service" | tr '[:upper:]' '[:lower:]')
             REPO_NAME=$(echo "${{ env.ACR_REPO_NAME }}" | tr '[:upper:]' '[:lower:]')
-            TAG="${{ env.ACR_NAME }}.azurecr.io/${REPO_NAME}/${IMAGE_NAME}-${{ matrix.environment }}:latest"
+            TAG="${REPO_NAME}.azurecr.io/${REPO_NAME}/${IMAGE_NAME}-${{ matrix.environment }}:latest"
 
             echo "IMAGE NAME: $IMAGE_NAME"
             echo "REPO NAME: $REPO_NAME"
