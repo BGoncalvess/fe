@@ -17,4 +17,4 @@ services:
     container_name: mfeassistant
     stdin_open: true
     ports:
-      - "${VITE_ASSISTANT_PORT:-5000}:80"
+      - "${VITE_ASSISTANT_PORT:-5001}:80"
