@@ -10,159 +10,85 @@ on:
 jobs:
   ci:
     runs-on: ubuntu-latest
+    outputs:
+      services: ${{ steps.set-services.outputs.SERVICES }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      # - name: Login Azure
-      #   uses: azure/login@v2
-      #   with:
-      #     creds: '{"clientId":"${{ secrets.AZURE_CLIENT_ID}}","clientSecret":"${{ secrets.AZURE_CLIENT_SECRET }}","tenantId":"${{ secrets.AZURE_TENANT_ID}}","subscriptionId":"${{ secrets.AZURE_SUBSCRIPTION_ID}}"}'
-
-      # - name: Get secrets from Key Vault
-      #   run: |
-      #     GITHUB_TOKEN_REPO_CTT=$(az keyvault secret show --name "${{ secrets.IDP_REPO_TOKEN_SECRET }}" --vault-name "${{ vars.AKV_NAME }}" --query value -o tsv)
-      #     echo "GITHUB_TOKEN_REPO_CTT=$GITHUB_TOKEN_REPO_CTT" >> $GITHUB_ENV
-      #     IDP_REPO_TOKEN
-
-      # - name: Code validations
-      #   run: echo 'Code validations'
-
-      # - name: Compile & run locally
-      #   run: |
-      #     chmod +x cli/*.sh
-      #     ./cli/start.sh -d
+      - name: Select MS
+        id: set-services
+        run: |
+          SERVICES=$(git diff --name-only HEAD main | grep -oP '(?<=src/|tests/)[^/]*' | grep -oP '^[^.]+' | uniq | tr '\n' ' ')
+          echo "SERVICES=$SERVICES" >> $GITHUB_ENV
+          DIR=$(git diff --name-only HEAD main | grep -oP '(?<=src/|tests/)[^/]*' | grep -oP '^[^.]+' | uniq | tr '\n' ' ')
+            echo "SERVICES=$SERVICES" >> $GITHUB_ENV
+            echo "services=$SERVICES" >> $GITHUB_OUTPUT
       
-      # - name: Compile & run cluster
-      #   run: |
-      #     ENV_LIST="dev qa prod" 
-      #     chmod +x cli/*.sh
-      #     for clusters_list in $ENV_LIST; do
-      #       ./cli/start.sh -d
-      #     done
-      #   env:
-      #     VITE_HOST_PORT: ${{ vars.VITE_HOST_PORT }}
-      #     VITE_ASSISTANT_PORT: ${{ vars.VITE_ASSISTANT_PORT }}
-      #     VITE_ASSISTANT_URL: ${{ vars.VITE_ASSISTANT_URL }}
+  build:
+    needs: ci
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        environment: ["dev", "qa", "prod"]
+    environment: ${{ matrix.environment }}
+    env:
+      SERVICES: ${{ needs.ci.outputs.services }}
+      VITE_ASSISTANT_PORT: ${{ vars.VITE_ASSISTANT_PORT }}
+      VITE_HOST_PORT: ${{ vars.VITE_HOST_PORT }}
+      VITE_ASSISTANT_URL: ${{ vars.VITE_ASSISTANT_URL }}
+    steps:   
+      - name: Build and Push Dynamically
+        run: |
+          for service in $SERVICES; do
+            IMAGE_NAME=$(echo "$service" | tr '[:upper:]' '[:lower:]')
+            REPO_NAME=$(echo "${{ vars.ACR_REPO_NAME }}" | tr '[:upper:]' '[:lower:]')
+            TAG="${{ vars.ACR_NAME }}.azurecr.io/${REPO_NAME}/${IMAGE_NAME}-${{ matrix.environment }}:latest"
 
-      # - name: Unit tests
-      #   run: echo 'Unit tests'
+            echo "Building and pushing $TAG"
+            
+            docker compose build "$IMAGE_NAME-${{ matrix.environment }}"
+            docker tag "$IMAGE_NAME-${{ matrix.environment }}" "$TAG"
+            docker push "$TAG"
+          done
 
-      # - name: Integration tests
-      #   run: echo 'Integration tests'
-
-      # - name: Cross integration tests
-      #   run: echo 'Cross integration tests'
-
-      # - name: Select MS
-      #   shell: bash
-      #   # SERVICES=$(git diff --name-only HEAD main | grep '^mfe' | cut -d'/' -f1 | sed 's/\.//g' | uniq | tr '\n' ' ')
-      #   run: |
-      #     SERVICES=("mfe.assistant mfe.host")
-      #     echo "SERVICES=$SERVICES" >> $GITHUB_ENV
-
-      # - name: Push images to ACR
-      #   shell: bash
-      #   run: |
-    #       az acr login --name "${{ vars.ACR_NAME }}"
-      #     for service in $SERVICES; do
-      #       IMAGE=$(docker images | grep -i "$service" | awk '{print $1}' | tr '[:upper:]' '[:lower:]')
-      #       REPO_NAME=$(echo "${{ vars.ACR_REPO_NAME }}" | tr '[:upper:]' '[:lower:]')
-      #       IMAGE_NAME=$(basename "${IMAGE}" | tr '[:upper:]' '[:lower:]')
-      #       docker tag "${IMAGE}" "${{ vars.ACR_NAME }}.azurecr.io/${REPO_NAME}/${IMAGE_NAME}:latest"
-      #       docker push "${{ vars.ACR_NAME }}.azurecr.io/${REPO_NAME}/${IMAGE_NAME}:latest"
-      #     done
-      #   env:
-      #     SERVICES: ${{ env.SERVICES }}
-
-      # - name: Upload to Blob Storage
-      #   run: |
-      #     curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
-      #     az storage blob upload-batch \
-      #       --account-name ${{ secrets.AZURE_STORAGE_ACCOUNT_NAME }} \
-      #       --account-key ${{ secrets.AZURE_STORAGE_ACCOUNT_KEY }} \
-      #       --destination "my-container-name" \
-      #       --source ./build
-
-      # - name: Update CDN
-      #   run: |
-      #     az cdn endpoint purge \
-      #       --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
-      #       --profile-name ${{ secrets.AZURE_CDN_PROFILE }} \
-      #       --name ${{ secrets.AZURE_CDN_ENDPOINT }} \
-      #       --content-paths "/*"
-
-      # - name: Clone IDP Repo
-      #   uses: actions/checkout@v4
-      #   with:
-      #     repository: ${{ vars.IDP_REPO_NAME }}
-      #     token: ${{ secrets.IDP_REPO_TOKEN }}
-
-      # - name: Install kubeseal
-      #   run: |
-      #     set -eu
-      #     curl -sL https://github.com/bitnami-labs/sealed-secrets/releases/download/v0.18.0/kubeseal-0.18.0-linux-amd64.tar.gz \
-      #       -o $GITHUB_WORKSPACE/kubeseal-0.18.0-linux-amd64.tar.gz
-      #     tar xzvf $GITHUB_WORKSPACE/kubeseal-0.18.0-linux-amd64.tar.gz
-      #     mkdir -p $GITHUB_WORKSPACE/bin
-      #     mv $GITHUB_WORKSPACE/{,bin/}kubeseal
-      #     chmod +x $GITHUB_WORKSPACE/bin/kubeseal
-      #     echo $GITHUB_WORKSPACE/bin >> $GITHUB_PATH
-
-      # - name: Get cluster credentials
-      #   shell: bash
-      #   run: |
-      #     az aks get-credentials --resource-group ${{ vars.AKS_RG_NAME_DEV }} --name ${{ vars.AKS_CLUSTER_NAME_DEV }}
-      
-      # - name: Encrypt Secrets
-      #   shell: bash
-      #   run: |
-      #     kubelogin convert-kubeconfig -l azurecli  
-      #     export AKS_CONTEXT=$(kubectl config current-context) 
-      #     kubeseal --context "$AKS_CONTEXT" --controller-namespace flux-system --fetch-cert > ./mycert.pem
-          
-      # NEW_SERVICES=$(echo "$SERVICES" | sed 's/\bmfe/mfe./g')
       - name: Set up environment variables
         run: |
           mkdir -p generated-ymls/
-          SERVICES=("mfehost" "mfeassistant")
-          CHANGED_SERVICES=()
-          for SERVICE in "${SERVICES[@]}"; do
-            CHANGED_SERVICE="${SERVICE:0:3}.${SERVICE:3}"
-            CHANGED_SERVICES+=("${CHANGED_SERVICE}")
-            echo "${CHANGED_SERVICE}"
-          done
-          for service in "${SERVICES[@]}"; do
+          for i in ${!SERVICES[@]}; do
+            service=${SERVICES[i]}
+            dir="${DIRS[i]}"
             export SERVICE_NAME="$service"
-            source "./.env"
-            for changed_service in "${CHANGED_SERVICES[@]}"; do
-              envsubst < "${changed_service}/infrastructure/manifest.yml" > "generated-ymls/${service}.yml"
-              cat "generated-ymls/${service}.yml"
-            done
-          done
-        env:
-          SERVICE: ${{ env.SERVICES }}
-          CERT_PEM: ${{ env.CERT_PEM }}
-          VITE_HOST_PORT: ${{ vars.VITE_HOST_PORT }}
-          VITE_ASSISTANT_PORT: ${{ vars.VITE_ASSISTANT_PORT }}
+            source "./.env.template"
+            envsubst < "${dir}/infrastructure/manifest.yml" > "./generated-ymls/${service}.yml"
+            cat "generated-ymls/${service}.yml"
+          done 
+
+  cd:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up git configuration
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Create PR
         run: |
           git checkout -b manifests
-          git status
           git add generated-ymls/*
           git commit -m "Add changes"
           git status
           git push --set-upstream origin manifests
 
-          gh pr create --base ${{ inputs.DESTINATION_BRANCH_NAME }} \
+          gh pr create --base ${{ env.DESTINATION_BRANCH_NAME }} \
                        --head manifests \
                        --title "Automated PR" \
                        --body "PR created by workflow" \
-                       --repo ${{ inputs.IDP_REPO_NAME }}
+                       --repo ${{ env.IDP_REPO_NAME }}
         env:
-          IDP_REPO_NAME: ${ vars.IDP_REPO_NAME }
-          DESTINATION_BRANCH_NAME: ${ vars.DESTINATION_BRANCH_NAME }
-          IDP_REPO_TOKEN: ${ secrets.IDP_REPO_TOKEN }
+          IDP_REPO_NAME: ${{ vars.IDP_REPO_NAME }}
+          DESTINATION_BRANCH_NAME: ${{ vars.DESTINATION_BRANCH_NAME }}
+          IDP_REPO_TOKEN: ${{ secrets.IDP_REPO_TOKEN }}
