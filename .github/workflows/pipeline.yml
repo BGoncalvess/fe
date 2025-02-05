@@ -86,9 +86,17 @@ jobs:
             echo "Processing service: $service"
             echo "Using directory: $dir"
             echo "Environment: ${{ matrix.environment }}"
+            echo "SERVICE_NAME: $SERVICE_NAME"
 
+            # Debugging: Print the manifest file before substitution
+            echo "Before substitution:"
+            cat "${dir}/infrastructure/manifest.yml"
+
+            # Perform the substitution
             envsubst < "${dir}/infrastructure/manifest.yml" > "./generated-ymls/${service}-${{ matrix.environment }}.yml"
-            
+
+            # Debugging: Print the generated YAML file after substitution
+            echo "After substitution:"
             cat "./generated-ymls/${service}-${{ matrix.environment }}.yml"
           done
 
