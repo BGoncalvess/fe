@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       services: ${{ steps.set-services.outputs.SERVICES }}
-      dir: ${{ steps.set-services.outputs.DIR }}
+      dirs: ${{ steps.set-services.outputs.DIRS }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -24,7 +24,10 @@ jobs:
         run: |
           SERVICES=$(git diff --name-only HEAD main | grep -oP '(?<=src/|tests/)[^/]*' | grep -oP '^[^.]+' | uniq | tr '\n' ' ')
           echo "SERVICES=$SERVICES" >> $GITHUB_OUTPUT
-          echo "DIR=$SERVICES" >> $GITHUB_OUTPUT
+          echo "DIRS=$SERVICES" >> $GITHUB_OUTPUT
+
+          echo "SREVICES: $SERVICES"
+          echo "DIRS: $DIRS"
       
   build:
     needs: ci
@@ -35,7 +38,7 @@ jobs:
     environment: ${{ matrix.environment }}
     env:
       SERVICES: ${{ needs.ci.outputs.services }}
-      DIRS: ${{ needs.ci.outputs.dir }}
+      DIRS: ${{ needs.ci.outputs.dirs }}
       VITE_ASSISTANT_PORT: ${{ vars.VITE_ASSISTANT_PORT }}
       VITE_HOST_PORT: ${{ vars.VITE_HOST_PORT }}
       VITE_ASSISTANT_URL: ${{ vars.VITE_ASSISTANT_URL }}
@@ -50,17 +53,17 @@ jobs:
 
       - name: Build and Push Dynamically
         run: |
+
+          echo "$SERVICES"
+
           for service in $SERVICES; do
             IMAGE_NAME=$(echo "$service" | tr '[:upper:]' '[:lower:]')
             REPO_NAME=$(echo "${{ vars.ACR_REPO_NAME }}" | tr '[:upper:]' '[:lower:]')
             TAG="${{ vars.ACR_NAME }}.azurecr.io/${REPO_NAME}/${IMAGE_NAME}-${{ matrix.environment }}:latest"
 
-            echo "$IMAGE_NAME"
-            echo "$REPO_NAME"
-            echo "$TAG"
-
-
-            echo "Building and pushing $TAG"
+            echo "IMAGE NAME: $IMAGE_NAME"
+            echo "REPO NAME: $REPO_NAME"
+            echo "TAG: $TAG"
             
             docker compose build "$IMAGE_NAME"
             echo "docker tag "$IMAGE_NAME" "$TAG""
