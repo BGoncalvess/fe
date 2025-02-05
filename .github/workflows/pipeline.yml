@@ -27,7 +27,7 @@ jobs:
           echo "SERVICES=$SERVICES" >> $GITHUB_OUTPUT
           echo "DIRS=$SERVICES" >> $GITHUB_OUTPUT
 
-          echo "SERVICES: $SERVICES"
+          echo "SERVICES: ${{ env.SERVICES}}"
           echo "DIRS: $DIRS"
       
   build:
@@ -56,8 +56,7 @@ jobs:
       - name: Build and Push Dynamically
         shell: bash
         run: |
-          set -x
-          echo "$SERVICES"
+          echo ${{ env.SERVICES}}
 
           for service in $SERVICES; do
             IMAGE_NAME=$(echo "$service" | tr '[:upper:]' '[:lower:]')
@@ -73,44 +72,43 @@ jobs:
             echo "docker push "$TAG" "
           done
 
-      - name: Generate yamls
-        run: |
-          mkdir -p generated-ymls/
+  #     - name: Generate yamls
+  #       run: |
+  #         mkdir -p generated-ymls/
 
-          echo "$SERVICES"
-          echo "$DIRS"
+  #         echo "$SERVICES"
+  #         echo "$DIRS"
 
-          for i in $SERVICES; do
-            dir=$service
+  #         for i in $SERVICES; do
 
-            export SERVICE_NAME="$service"
-            envsubst < "${dir}/infrastructure/manifest.yml" > "./generated-ymls/${service}.yml"
-            cat "generated-ymls/${service}.yml"
-          done 
+  #           export SERVICE_NAME="$service"
+  #           envsubst < "${service}/infrastructure/manifest.yml" > "./generated-ymls/${service}.yml"
+  #           cat "generated-ymls/${service}.yml"
+  #         done 
 
-  cd:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Set up git configuration
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+  # cd:
+  #   needs: build
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Set up git configuration
+  #       run: |
+  #         git config --global user.name "github-actions[bot]"
+  #         git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Create PR
-        run: |
-          git checkout -b manifests
-          git add generated-ymls/*
-          git commit -m "Add changes"
-          git status
-          git push --set-upstream origin manifests
+  #     - name: Create PR
+  #       run: |
+  #         git checkout -b manifests
+  #         git add generated-ymls/*
+  #         git commit -m "Add changes"
+  #         git status
+  #         git push --set-upstream origin manifests
 
-          gh pr create --base ${{ env.DESTINATION_BRANCH_NAME }} \
-                       --head manifests \
-                       --title "Automated PR" \
-                       --body "PR created by workflow" \
-                       --repo ${{ env.IDP_REPO_NAME }}
-        env:
-          IDP_REPO_NAME: ${{ vars.IDP_REPO_NAME }}
-          DESTINATION_BRANCH_NAME: ${{ vars.DESTINATION_BRANCH_NAME }}
-          IDP_REPO_TOKEN: ${{ secrets.IDP_REPO_TOKEN }}
+  #         gh pr create --base ${{ env.DESTINATION_BRANCH_NAME }} \
+  #                      --head manifests \
+  #                      --title "Automated PR" \
+  #                      --body "PR created by workflow" \
+  #                      --repo ${{ env.IDP_REPO_NAME }}
+  #       env:
+  #         IDP_REPO_NAME: ${{ vars.IDP_REPO_NAME }}
+  #         DESTINATION_BRANCH_NAME: ${{ vars.DESTINATION_BRANCH_NAME }}
+  #         IDP_REPO_TOKEN: ${{ secrets.IDP_REPO_TOKEN }}
