@@ -40,6 +40,11 @@ jobs:
       VITE_HOST_PORT: ${{ vars.VITE_HOST_PORT }}
       VITE_ASSISTANT_URL: ${{ vars.VITE_ASSISTANT_URL }}
     steps:   
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - name: ls
         run: ls -la
 
