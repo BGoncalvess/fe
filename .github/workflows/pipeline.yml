@@ -23,9 +23,9 @@ jobs:
       - name: Select MS
         id: set-services
         run: |
-          SERVICES=$("mfeassistant mfehost")
+          SERVICES=("mfeassistant mfehost")
           echo "SERVICES=$SERVICES" >> $GITHUB_OUTPUT
-          DIRS=$("mfe.assistant mfe.host")
+          DIRS=("mfe.assistant mfe.host")
           echo "DIRS=$DIRS" >> $GITHUB_OUTPUT
 
           echo "SERVICES: ${{ env.SERVICES}}"
