@@ -55,16 +55,25 @@ jobs:
             REPO_NAME=$(echo "${{ vars.ACR_REPO_NAME }}" | tr '[:upper:]' '[:lower:]')
             TAG="${{ vars.ACR_NAME }}.azurecr.io/${REPO_NAME}/${IMAGE_NAME}-${{ matrix.environment }}:latest"
 
+            echo "$IMAGE_NAME"
+            echo "$REPO_NAME"
+            echo "$TAG"
+
+
             echo "Building and pushing $TAG"
             
-            docker compose build "$IMAGE_NAME-${{ matrix.environment }}"
-            docker tag "$IMAGE_NAME-${{ matrix.environment }}" "$TAG"
-            docker push "$TAG"
+            docker compose build "$IMAGE_NAME"
+            echo "docker tag "$IMAGE_NAME" "$TAG""
+            echo "docker push "$TAG" "
           done
 
-      - name: Set up environment variables
+      - name: Generate yamls
         run: |
           mkdir -p generated-ymls/
+
+          echo "$SERVICES"
+          echo "$DIRS"
+
           for i in ${!SERVICES[@]}; do
             service=${SERVICES[i]}
             dir="${DIRS[i]}"
