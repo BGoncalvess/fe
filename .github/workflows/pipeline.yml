@@ -81,7 +81,7 @@ jobs:
           for i in "${!SERVICES_ARRAY[@]}"; do
             service="${SERVICES_ARRAY[$i]}"
             dir="${DIRS_ARRAY[$i]}"
-            export SERVICE_NAME="$service"
+            export SERVICE="$service"
 
             echo "Processing service: $service"
             echo "Using directory: $dir"

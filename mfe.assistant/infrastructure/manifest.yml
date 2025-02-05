@@ -1,16 +1,16 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ${SERVICE_NAME}-deployment
+  name: ${SERVICE}-deployment
   namespace: galaxy-ms
   labels:
-    app: ${SERVICE_NAME}
+    app: ${SERVICE}
     version: 0.0.0
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: ${SERVICE_NAME}
+      app: ${SERVICE}
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -19,13 +19,13 @@ spec:
   template:
     metadata:
       labels:
-        app: ${SERVICE_NAME}
+        app: ${SERVICE}
         version: 0.0.0
     spec:
-      serviceAccountName: ${SERVICE_NAME}-service-account
+      serviceAccountName: ${SERVICE}-service-account
       containers:
-      - name: ${SERVICE_NAME}
-        image: ${IMAGE_NAME}:7.4-alpine
+      - name: ${SERVICE}
+        image: ${SERVICE}:7.4-alpine
         imagePullPolicy: Never
         ports:
         - containerPort: ${VITE_ASSISTANT_PORT}
@@ -55,17 +55,17 @@ spec:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: ${SERVICE_NAME}-service-account
+  name: ${SERVICE}-service-account
   namespace: galaxy-ms
   labels:
-    account: ${SERVICE_NAME}
+    account: ${SERVICE}
 
 ---
 
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: ${SERVICE_NAME}-cluster-role
+  name: ${SERVICE}-cluster-role
 rules:
   - apiGroups: [""]
     resources: ["pods"]
@@ -76,13 +76,13 @@ rules:
 apiVersion: v1
 kind: Service
 metadata:
-  name: ${SERVICE_NAME}-service
+  name: ${SERVICE}-service
   namespace: galaxy-ms
   labels:
-    app: ${SERVICE_NAME}
+    app: ${SERVICE}
 spec:
   selector:
-    app: ${SERVICE_NAME}
+    app: ${SERVICE}
   ports:
     - protocol: TCP
       port: ${VITE_ASSISTANT_PORT}
@@ -95,17 +95,17 @@ spec:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: ${SERVICE_NAME}-service-account
+  name: ${SERVICE}-service-account
   namespace: galaxy-ms
   labels:
-    account: ${SERVICE_NAME}
+    account: ${SERVICE}
 
 ---
 
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: ${SERVICE_NAME}-cluster-role
+  name: ${SERVICE}-cluster-role
 rules:
   - apiGroups: [""]
     resources: ["pods"]
@@ -116,7 +116,7 @@ rules:
 apiVersion: v1
 kind: Secret
 metadata:
-  name: ${SERVICE_NAME}-secret
+  name: ${SERVICE}-secret
   type: Opaque
 data:
   cert.pem: ${CERT_PEM}
