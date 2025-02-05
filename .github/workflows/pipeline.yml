@@ -69,7 +69,7 @@ jobs:
             echo "REPO NAME: $REPO_NAME"
             echo "TAG: $TAG"
             
-            docker compose build "$IMAGE_NAME"
+            docker compose build
             echo "docker tag "$IMAGE_NAME" "$TAG""
             echo "docker push "$TAG" "
           done
