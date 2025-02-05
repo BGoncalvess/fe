@@ -23,9 +23,10 @@ jobs:
       - name: Select MS
         id: set-services
         run: |
-          SERVICES=$(git diff --name-only HEAD main | grep -oP '(?<=src/|tests/)[^/]*' | grep -oP '^[^.]+' | uniq | tr '\n' ' ')
+          SERVICES=$(git diff --name-only HEAD main | grep '^mfe' | cut -d'/' -f1 | sed 's/\.//g' | uniq | tr '\n' ' ')
           echo "SERVICES=$SERVICES" >> $GITHUB_OUTPUT
-          echo "DIRS=$SERVICES" >> $GITHUB_OUTPUT
+          DIRS=$(git diff --name-only HEAD main | grep '^mfe' | cut -d'/' -f1 | uniq | tr '\n' ' ')
+          echo "DIRS=$DIRS" >> $GITHUB_OUTPUT
 
           echo "SERVICES: ${{ env.SERVICES}}"
           echo "DIRS: $DIRS"
@@ -72,19 +73,17 @@ jobs:
             echo "docker push "$TAG" "
           done
 
-  #     - name: Generate yamls
-  #       run: |
-  #         mkdir -p generated-ymls/
+      - name: Generate yamls
+        run: |
+          mkdir -p generated-ymls/
 
-  #         echo "$SERVICES"
-  #         echo "$DIRS"
-
-  #         for i in $SERVICES; do
-
-  #           export SERVICE_NAME="$service"
-  #           envsubst < "${service}/infrastructure/manifest.yml" > "./generated-ymls/${service}.yml"
-  #           cat "generated-ymls/${service}.yml"
-  #         done 
+          for i in ${!SERVICES[@]}; do
+            service=${SERVICES[i]}
+            dir="${DIRS[i]}"
+            export SERVICE_NAME="$service"
+            envsubst < "${dir}/infrastructure/manifest.yml" > "./generated-ymls/${service}.yml"
+            cat "generated-ymls/${service}.yml"
+          done  
 
   # cd:
   #   needs: build
