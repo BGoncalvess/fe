@@ -77,10 +77,11 @@ jobs:
       - name: Generate yamls
         run: |
           mkdir -p generated-ymls/
-
-          for i in ${!SERVICES[@]}; do
-            service=${SERVICES[i]}
-            dir="${DIRS[i]}"
+          SERVICES_ARRAY=(${SERVICES})
+          DIRS_ARRAY=(${DIRS})
+          for i in "${!SERVICES_ARRAY[@]}"; do
+            service=${SERVICES_ARRAY[$i]}
+            dir="${DIRS_ARRAY[$i]}"
             export SERVICE_NAME="$service"
             envsubst < "${dir}/infrastructure/manifest.yml" > "./generated-ymls/${service}.yml"
             cat "generated-ymls/${service}.yml"
