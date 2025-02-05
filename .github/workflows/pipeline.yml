@@ -52,40 +52,41 @@ jobs:
           fetch-depth: 0
           ref: main
 
-      - name: ls
-        run: ls -la
+      # - name: Build and Push Dynamically
+      #   shell: bash
+      #   run: |
+      #     echo ${{ env.SERVICES}}
 
-      - name: Build and Push Dynamically
-        shell: bash
-        run: |
-          echo ${{ env.SERVICES}}
+      #     for service in $SERVICES; do
+      #       IMAGE_NAME=$(echo "$service" | tr '[:upper:]' '[:lower:]')
+      #       REPO_NAME=$(echo "${{ env.ACR_REPO_NAME }}" | tr '[:upper:]' '[:lower:]')
+      #       TAG="${REPO_NAME}.azurecr.io/${REPO_NAME}/${IMAGE_NAME}-${{ matrix.environment }}:latest"
 
-          for service in $SERVICES; do
-            IMAGE_NAME=$(echo "$service" | tr '[:upper:]' '[:lower:]')
-            REPO_NAME=$(echo "${{ env.ACR_REPO_NAME }}" | tr '[:upper:]' '[:lower:]')
-            TAG="${REPO_NAME}.azurecr.io/${REPO_NAME}/${IMAGE_NAME}-${{ matrix.environment }}:latest"
-
-            echo "IMAGE NAME: $IMAGE_NAME"
-            echo "REPO NAME: $REPO_NAME"
-            echo "TAG: $TAG"
+      #       echo "IMAGE NAME: $IMAGE_NAME"
+      #       echo "REPO NAME: $REPO_NAME"
+      #       echo "TAG: $TAG"
             
-            docker compose build
-            echo "docker tag "$IMAGE_NAME" "$TAG""
-            echo "docker push "$TAG" "
-          done
+      #       docker compose build
+      #       echo "docker tag "$IMAGE_NAME" "$TAG""
+      #       echo "docker push "$TAG" "
+      #     done
 
       - name: Generate yamls
         run: |
           mkdir -p generated-ymls/
+          
           SERVICES_ARRAY=(${SERVICES})
           DIRS_ARRAY=(${DIRS})
+
           for i in "${!SERVICES_ARRAY[@]}"; do
-            service=${SERVICES_ARRAY[$i]}
+            service="${SERVICES_ARRAY[$i]}"
             dir="${DIRS_ARRAY[$i]}"
             export SERVICE_NAME="$service"
-            envsubst < "${dir}/infrastructure/manifest.yml" > "./generated-ymls/${service}.yml"
-            cat "generated-ymls/${service}.yml"
-          done  
+
+            envsubst < "${dir}/infrastructure/manifest.yml" > "./generated-ymls/${service}-${{ matrix.environment }}.yml"
+            
+            cat "./generated-ymls/${service}-${{ matrix.environment }}.yml"
+          done
 
   # cd:
   #   needs: build
