@@ -45,7 +45,7 @@ jobs:
           fetch-depth: 0
       - name: ls
         run: ls -la
-        
+
       - name: Build and Push Dynamically
         run: |
           for service in $SERVICES; do
@@ -67,7 +67,7 @@ jobs:
             service=${SERVICES[i]}
             dir="${DIRS[i]}"
             export SERVICE_NAME="$service"
-            source < "./.env.template" > .env
+            source < "./.env.template" > ".env"
             envsubst < "${dir}/infrastructure/manifest.yml" > "./generated-ymls/${service}.yml"
             cat "generated-ymls/${service}.yml"
           done 
