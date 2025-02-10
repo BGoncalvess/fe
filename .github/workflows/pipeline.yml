@@ -1,128 +1,75 @@
-name: ci/cd
+name: CI/CD Pipeline
 
 on:
-  pull_request:
-    types: [opened, edited, synchronize, reopened]
   push:
-    branches: ["*"]
-  workflow_dispatch:
+    branches:
+      - '**'
+      
+  pull_request:
+    branches:
+      - main
 
 jobs:
   ci:
     runs-on: ubuntu-latest
-    outputs:
-      services: ${{ steps.set-services.outputs.SERVICES }}
-      dirs: ${{ steps.set-services.outputs.DIRS }}
+    if: github.event_name == 'push'
+
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          ref: main
-
-      - name: Select MS
-        id: set-services
-        run: |
-          SERVICES=("mfeassistant mfehost")
-          echo "SERVICES=$SERVICES" >> $GITHUB_OUTPUT
-          DIRS=("mfe.assistant mfe.host")
-          echo "DIRS=$DIRS" >> $GITHUB_OUTPUT
-
-          echo "SERVICES: ${{ env.SERVICES}}"
-          echo "DIRS: $DIRS"
+        run: echo "Checkout code"
       
-  build:
-    needs: ci
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        environment: ["dev", "qa", "prod"]
-    environment: ${{ matrix.environment }}
-    env:
-      SERVICES: ${{ needs.ci.outputs.services }}
-      DIRS: ${{ needs.ci.outputs.dirs }}
-      VITE_ASSISTANT_PORT: ${{ vars.VITE_ASSISTANT_PORT }}
-      VITE_HOST_PORT: ${{ vars.VITE_HOST_PORT }}
-      VITE_ASSISTANT_URL: ${{ vars.VITE_ASSISTANT_URL }}
-      ACR_REPO_NAME: ${{ vars.ACR_REPO_NAME }}
-    steps:   
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          ref: main
+      - name: Select MS
+        run: echo "Select MS"
+      
+      - name: Code validations
+        run: echo "Code validations"
+      
+      - name: Compile & run locally
+        run: echo "Compile & run"
+      
+      - name: Unit tests
+        run: echo "Unit tests"
+      
+      - name: Integration tests
+        run: echo "Integration tests"
+      
+      - name: Cross integration tests
+        run: echo "Cross integration tests"
 
-      # - name: Build and Push Dynamically
-      #   shell: bash
-      #   run: |
-      #     echo ${{ env.SERVICES}}
+      - name: Build images Dev, QA, Prod
+        run: echo "Compile & run"
 
-      #     for service in $SERVICES; do
-      #       IMAGE_NAME=$(echo "$service" | tr '[:upper:]' '[:lower:]')
-      #       REPO_NAME=$(echo "${{ env.ACR_REPO_NAME }}" | tr '[:upper:]' '[:lower:]')
-      #       TAG="${REPO_NAME}.azurecr.io/${REPO_NAME}/${IMAGE_NAME}-${{ matrix.environment }}:latest"
+      - name: Push images to ACR
+        run: echo "Push images to ACR"
 
-      #       echo "IMAGE NAME: $IMAGE_NAME"
-      #       echo "REPO NAME: $REPO_NAME"
-      #       echo "TAG: $TAG"
-            
-      #       docker compose build
-      #       echo "docker tag "$IMAGE_NAME" "$TAG""
-      #       echo "docker push "$TAG" "
-      #     done
+      - name: Login Azure
+        run: echo ""
 
-      - name: Generate yamls
-        run: |
-          mkdir -p generated-ymls/
-    
-          SERVICES_ARRAY=(${SERVICES})
-          DIRS_ARRAY=(${DIRS})
+      - name: Install kubeseal
+        run: echo ""
 
-          for i in "${!SERVICES_ARRAY[@]}"; do
-            service="${SERVICES_ARRAY[$i]}"
-            dir="${DIRS_ARRAY[$i]}"
-            export SERVICE="$service"
+      - name: Get cluster credentials
+        run: echo ""
 
-            echo "Processing service: $service"
-            echo "Using directory: $dir"
-            echo "Environment: ${{ matrix.environment }}"
-            echo "SERVICE_NAME: $SERVICE_NAME"
-
-            # Debugging: Print the manifest file before substitution
-            echo "Before substitution:"
-            cat "${dir}/infrastructure/manifest.yml"
-
-            # Perform the substitution
-            envsubst < "${dir}/infrastructure/manifest.yml" > "./generated-ymls/${service}-${{ matrix.environment }}.yml"
-
-            # Debugging: Print the generated YAML file after substitution
-            echo "After substitution:"
-            cat "./generated-ymls/${service}-${{ matrix.environment }}.yml"
-          done
 
   cd:
-    needs: build
     runs-on: ubuntu-latest
+    needs: ci
+    if: github.event_name == 'pull_request' && github.base_ref == 'main'
+
     steps:
-      - name: Set up git configuration
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Create PR
-        run: |
-          git checkout -b manifests
-          git add generated-ymls/*
-          git commit -m "Add changes"
-          git status
-          git push --set-upstream origin manifests
+      - name: Clone IDP Repo
+        run: echo ""
 
-          gh pr create --base ${{ env.DESTINATION_BRANCH_NAME }} \
-                       --head manifests \
-                       --title "Automated PR" \
-                       --body "PR created by workflow" \
-                       --repo ${{ env.IDP_REPO_NAME }}
-        env:
-          IDP_REPO_NAME: ${{ vars.IDP_REPO_NAME }}
-          DESTINATION_BRANCH_NAME: ${{ vars.DESTINATION_BRANCH_NAME }}
-          IDP_REPO_TOKEN: ${{ secrets.IDP_REPO_TOKEN }}
+      - name: Create and push new branch
+        run: echo "Create and push new branch"
+
+      - name: Generate k8s manifests
+        run: echo "Generate k8s manifests"
+      
+      - name: Create PR to IDP
+        if: github.event.pull_request.merged == 'true'
+        run: |
+          echo "Create PR to IDP"
+          echo "PR merged"
