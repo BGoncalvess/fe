@@ -6,6 +6,7 @@ on:
       - '**'
       
   pull_request:
+    types: [opened, edited, synchronize, reopened]
     branches:
       - main
 
@@ -58,6 +59,9 @@ jobs:
     if: github.event_name == 'pull_request' && github.base_ref == 'main'
 
     steps:
+      - name: Print Values
+        run: |
+         echo "github.event_name ${{ github.event_name }} github.base_ref: ${{ github.base_ref }}"
 
       - name: Clone IDP Repo
         run: echo ""
