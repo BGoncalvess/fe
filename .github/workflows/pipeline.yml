@@ -50,7 +50,9 @@ jobs:
         run: echo ""
 
       - name: Get cluster credentials
-        run: echo ""
+        run: |
+          echo "github.event_name ${{ github.event_name }} github.base_ref: ${{ github.base_ref }}"
+
 
 
   cd:
