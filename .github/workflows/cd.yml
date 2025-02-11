@@ -1,8 +1,8 @@
-name: CI/CD Pipeline
+name: CD Pipeline
 
 on:
   workflow_run:
-    workflows: ["Build and Test"]
+    workflows: ["CI Pipeline"]
   push:
     branches:
       - main
