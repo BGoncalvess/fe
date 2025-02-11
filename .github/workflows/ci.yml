@@ -1,0 +1,29 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - '**'
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        run: echo "Checkout code"
+      
+      - name: Code validations
+        run: echo "Code validations"
+      
+      - name: Compile & run locally
+        run: echo "Compile & run"
+      
+      - name: Unit tests
+        run: echo "Unit tests"
+      
+      - name: Integration tests
+        run: echo "Integration tests"
+      
+      - name: Cross integration tests
+        run: echo "Cross integration tests"

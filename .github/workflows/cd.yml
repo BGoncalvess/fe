@@ -1,0 +1,42 @@
+name: CI/CD Pipeline
+
+on:      
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+    branches:
+      - main
+jobs:
+  cd:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print Values
+        run: |
+          echo "github.event_name ${{ github.event_name }} github.base_ref: ${{ github.base_ref }}"
+
+      - name: Login Azure
+        run: echo ""
+          
+      - name: Install kubeseal
+        run: echo ""
+          
+      - name: Get cluster credentials
+        run: |
+          echo "github.event_name ${{ github.event_name }} github.base_ref: ${{ github.base_ref }}"
+          
+      - name: Select MS
+        run: echo "Select MS"
+        
+      - name: Clone IDP Repo
+        run: echo ""
+
+      - name: Create and push new branch
+        run: echo "Create and push new branch"
+
+      - name: Generate k8s manifests
+        run: echo "Generate k8s manifests"
+        
+      - name: Create PR to IDP
+        if: github.event.pull_request.merged == 'true'
+        run: |
+          echo "Create PR to IDP"
+          echo "PR merged"
