@@ -1,3 +1,0 @@
-# Microfrontend Project
-
-asdasd
