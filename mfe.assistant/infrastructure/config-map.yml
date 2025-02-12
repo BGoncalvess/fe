@@ -1,6 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: ${SERVICE}-config
-data:
-  CERT_SECRET_NAME: ${SERVICE}-secret
